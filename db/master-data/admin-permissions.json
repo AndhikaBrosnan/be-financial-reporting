@@ -1,0 +1,18 @@
+[
+  {
+    "name": "create user",
+    "description": "Admin can create user"
+  },
+  {
+    "name": "read user",
+    "description": "Admin can read user"
+  },
+  {
+    "name": "edit user",
+    "description": ""
+  },
+  {
+    "name": "delete user",
+    "description": null
+  }
+]

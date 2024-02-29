@@ -1,0 +1,13 @@
+versioning:
+  image: registry.gitlab.com/paragon-is/cloud-infrastructure/pti-playbooks/semver:latest
+  tags: [staging]
+  stage: versioning
+  script:
+    - /semver/init.sh dev beta stable
+  artifacts: 
+    paths:
+      - public-ver
+  only:
+    - dev
+    - beta
+    - stable

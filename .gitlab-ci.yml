@@ -1,0 +1,20 @@
+include:
+  - infra/gitlab/common.yml
+  - infra/gitlab/development.yml
+  - infra/gitlab/staging.yml
+  - infra/gitlab/production.yml
+
+stages:
+  - versioning
+  - build-dev
+  - deploy-dev
+  - build-staging
+  - deploy-staging
+  - build-production
+  - deploy-preproduction
+  - deploy-production
+
+cache:
+  paths:
+    - node_modules/
+    - .npm

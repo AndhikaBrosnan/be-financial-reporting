@@ -1,0 +1,58 @@
+build-production:
+  needs: ['versioning']
+  stage: build-production
+  tags: [staging]
+  image:
+    name: gcr.io/kaniko-project/executor:debug
+    entrypoint: [""]
+  before_script:
+    - cd public-ver
+    - export CURRENT_TAG_NAME=$(head -n 1 .ver_name.txt)
+    - mkdir -p /kaniko/.docker
+    - echo "{\"auths\":{\"${CI_REGISTRY}\":{\"auth\":\"$(printf "%s:%s" "${CI_REGISTRY_USER}" "${CI_REGISTRY_PASSWORD}" | base64 | tr -d '\n')\"}}}" > /kaniko/.docker/config.json
+  script:
+    - >-
+      /kaniko/executor
+      --context "${CI_PROJECT_DIR}"
+      --dockerfile "${CI_PROJECT_DIR}/Dockerfile"
+      --destination "${CI_REGISTRY_IMAGE}/production:${CURRENT_TAG_NAME}"
+      --destination "${CI_REGISTRY_IMAGE}/production:latest"
+    - >-
+      /kaniko/executor
+      --context "${CI_PROJECT_DIR}"
+      --dockerfile "${CI_PROJECT_DIR}/Dockerfile"
+      --destination "${CI_REGISTRY_IMAGE}/preproduction:${CURRENT_TAG_NAME}"
+      --destination "${CI_REGISTRY_IMAGE}/preproduction:latest"
+  only:
+    - stable
+
+deploy-preproduction:
+  needs: ['build-production']
+  stage: deploy-preproduction
+  tags: [staging]
+  variables: 
+    KUBE_CONTEXT: "paragon-is/solution-delivery-operations/gitlab-agent-for-kubernetes-sdm:ga4k-sdm-eks-staging"
+  image:
+    name: registry.gitlab.com/paragon-is/cloud-infrastructure/pti-playbooks/iac-kube:latest
+    entrypoint: [""]
+  script:
+    - /iac/init-preproduction.sh -e env-configmapref -l nginx -r 1 -f js
+  only:
+    - stable
+
+deploy-production:
+  needs: ['build-production']
+  stage: deploy-production
+  tags: [staging]
+  variables: 
+    KUBE_CONTEXT: "paragon-is/solution-delivery-operations/gitlab-agent-for-kubernetes-sdm:ga4k-sdm-eks-production"
+  image:
+    name: registry.gitlab.com/paragon-is/cloud-infrastructure/pti-playbooks/iac-kube:latest
+    entrypoint: [""]
+  script:
+    - /iac/init-production.sh -e env-configmapref -l aws-alb -r 1 -f js
+    - /iac/init-production-slave.sh -e env-configmapref -l aws-alb -r 3 -f js
+  only:
+    - stable
+  when: manual
+  

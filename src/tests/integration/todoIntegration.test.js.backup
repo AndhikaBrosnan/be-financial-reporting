@@ -1,0 +1,46 @@
+const { faker } = require("@faker-js/faker");
+const TodoService = require("#services/todo");
+const axios = require("axios");
+
+// create
+describe("[integration] create todo", () => {
+  test("[happy case] hit create todo API", async () => {
+    const randomTask = await faker.lorem.sentence(1);
+    const randomNumber = await faker.number.int(1);
+    const randomBoolean = await faker.datatype.boolean();
+    const payload_create = {
+      task: randomTask,
+      isDone: randomBoolean,
+      priority: randomNumber,
+    };
+    const url_integration = `http://localhost:${process.env.PORT}/todo`;
+    const { data } = await axios({
+      url: url_integration,
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${"ad35d328-a6e9-4cb3-9bf1-780db9c0ab1c"}`,
+      },
+      data: payload_create,
+    });
+    // console.log("[debug] response: ", data);
+    expect(data).toHaveProperty("errorStatus", false);
+  });
+});
+
+// list;
+describe("[integration] list todo", () => {
+  test("[happy case] hit list todo API", async () => {
+    const url_integration = `http://localhost:${process.env.PORT}/todo`;
+    const { data } = await axios({
+      url: url_integration,
+      method: "GET",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${"ad35d328-a6e9-4cb3-9bf1-780db9c0ab1c"}`,
+      },
+    });
+    // console.log("[debug] response: ", data);
+    expect(data).toHaveProperty("errorStatus", false);
+  });
+});

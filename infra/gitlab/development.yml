@@ -1,0 +1,35 @@
+build-dev:
+  needs: ['versioning']
+  stage: build-dev
+  tags: [staging]
+  image:
+    name: gcr.io/kaniko-project/executor:debug
+    entrypoint: [""]
+  before_script:
+    - cd public-ver
+    - export CURRENT_TAG_NAME=$(head -n 1 .ver_name.txt)
+    - mkdir -p /kaniko/.docker
+    - echo "{\"auths\":{\"${CI_REGISTRY}\":{\"auth\":\"$(printf "%s:%s" "${CI_REGISTRY_USER}" "${CI_REGISTRY_PASSWORD}" | base64 | tr -d '\n')\"}}}" > /kaniko/.docker/config.json
+  script:
+    - >-
+      /kaniko/executor
+      --context "${CI_PROJECT_DIR}"
+      --dockerfile "${CI_PROJECT_DIR}/Dockerfile"
+      --destination "${CI_REGISTRY_IMAGE}/dev:${CURRENT_TAG_NAME}"
+      --destination "${CI_REGISTRY_IMAGE}/dev:latest"
+  only:
+    - dev
+
+deploy-dev:
+  needs: ['build-dev']
+  stage: deploy-dev
+  tags: [staging]
+  variables: 
+    KUBE_CONTEXT: "paragon-is/solution-delivery-operations/gitlab-agent-for-kubernetes-sdm:ga4k-sdm-eks-staging"
+  image:
+    name: registry.gitlab.com/paragon-is/cloud-infrastructure/pti-playbooks/iac-kube:latest
+    entrypoint: [""]
+  script:
+    - /iac/init-dev.sh -e env-configmapref -l nginx -r 1 -f js
+  only:
+    - dev
