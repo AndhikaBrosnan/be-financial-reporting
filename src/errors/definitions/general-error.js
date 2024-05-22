@@ -79,6 +79,13 @@ module.exports = class GeneralError extends Error {
     })
   }
 
+  static invalidFileMiletype (mimeType) {
+    return new GeneralError(400, {
+      message: `File MimeType ${ mimeType } not allowed`,
+      code: 402
+    })
+  }
+
   constructor (httpStatusCode, ...errors) {
     super(errors[0].message)
     this.httpStatusCode = httpStatusCode
