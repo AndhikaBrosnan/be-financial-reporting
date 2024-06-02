@@ -18,10 +18,23 @@ const UserTokenService = {
   },
 
   async findUserByToken (token) {
-    const { userId } = new JWTHelper().decodeJWTToken(token)
-    const userFound = await User.findOne({ id: userId })
+    // const { userId } = new JWTHelper().decodeJWTToken(token)
+    // 
+    const userToken = await UserToken.findOne(
+      {
+        where: { token },
+        include: [
+          {
+            model: User,
+          }
+        ]
+      }
+    )
+    console.log('[userbyToken]: ', userToken)
+    console.log('[userbyToken user]: ', userToken.user)
+    // const userFound = await User.findOne({ id: userbyToken.userId })
 
-    return userFound
+    return userToken
   }
 }
 

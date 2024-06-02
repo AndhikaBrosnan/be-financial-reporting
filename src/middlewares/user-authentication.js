@@ -4,6 +4,7 @@ const UserTokenService = require('#services/userToken')
 module.exports = async (req, res, next) => {
   const userToken = getAuthorizationToken(req)
   const user = await getUser(userToken)
+  console.log('[test userAuth] user: ', user)
   req.userId = user.id
   return next()
 }
@@ -22,6 +23,7 @@ function getAuthorizationToken (req) {
 
 async function getUser (userToken) {
   const result = await UserTokenService.findUserByToken(userToken)
+  console.log('[test] Result get user: ', result)
 
   if (!result) {
     throw GeneralError.unauthorized()

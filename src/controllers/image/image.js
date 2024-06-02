@@ -1,4 +1,5 @@
 const GeneralError = require("#errors/definitions/general-error")
+const Nanoid = require("#helpers/Nanoid")
 const AwsS3Service = require("#services/aws")
 const ImageService = require("#services/image")
 const fs = require('fs')
@@ -24,7 +25,17 @@ module.exports = class Controller {
             throw GeneralError.invalidFileMiletype(mimeType)
         }
 
-        const filePath = await AwsS3Service.upload(image)
+        let isPublic = true
+        let fileName = null
+        let folderPrefix = 'test-'
+        let destination = fileName ? folderPrefix + '-' + process.env.NODE_ENV + '/' + fileName + ext : folderPrefix + '-' + process.env.NODE_ENV + '/' + Nanoid.get(10) + ext
+
+        if (isPublic === true) {
+            destination = 'uploads/' + destination
+        } else {
+            destination = 'uploads-secret/' + destination
+        }
+        const filePath = await AwsS3Service.uploadFile(image, destination, isPublic)
 
         await ImageService.createImage({ filePath })
 
@@ -34,7 +45,6 @@ module.exports = class Controller {
 
     static async download (req, res) {
         const { filePath } = req.params
-
         const stream = await AwsS3Service.streamFileDownload(filePath)
         stream.pipe(res)
     }
